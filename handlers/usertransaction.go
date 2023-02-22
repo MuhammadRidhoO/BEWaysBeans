@@ -5,9 +5,8 @@ import (
 	"BEWaysBeans/repositories"
 	"encoding/json"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type handlerUserTrc struct {
@@ -21,10 +20,11 @@ func HandlerUsertrc(UserTrcRepository repositories.UserTrcRepository) *handlerUs
 func (h *handlerUserTrc) FindUserTrc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+	idUser := int(userInfo["id"].(float64))
 
 	// var trips models.Trip
-	transaction, err := h.UserTrcRepository.FindUserTrc(id)
+	transaction, err := h.UserTrcRepository.FindUserTrc(idUser)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
