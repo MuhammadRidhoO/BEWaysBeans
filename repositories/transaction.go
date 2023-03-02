@@ -9,6 +9,7 @@ type TransactionRepository interface {
 	FindTransactions() ([]models.Transaction, error)
 	FindTransactionsByUser(Id int) ([]models.Transaction, error)
 	GetTransaction(ID int) (models.Transaction, error)
+	GetTransactionString(ID string) (models.Transaction, error)
 	CreateTransaction(newTransaction models.Transaction) (models.Transaction, error)
 	UpdateTransaction(Status_Payment string, ID int) (models.Transaction, error)
 }
@@ -40,6 +41,14 @@ func (r *repository) GetTransaction(ID int) (models.Transaction, error) {
 	return transaction, err
 }
 
+// mengambil 1 transaksi berdasarkan id
+func (r *repository) GetTransactionString(ID string) (models.Transaction, error) {
+	var transaction models.Transaction
+	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction, ID).Error
+
+	return transaction, err
+}
+
 // menambahkan transaksi baru
 func (r *repository) CreateTransaction(newTransaction models.Transaction) (models.Transaction, error) {
 	err := r.db.Create(&newTransaction).Error
@@ -58,7 +67,7 @@ func (r *repository) UpdateTransaction(Status_Payment string, ID int) (models.Tr
 			var product models.Product
 			r.db.First(&product, order.Product.Id)
 			product.Stock = product.Stock - order.Qty
-			r.db.Model(&product).Updates(product)
+			r.db.Model(&product).Where("id = ?", ID).Updates(product)
 		}
 	}
 
@@ -73,13 +82,13 @@ func (r *repository) UpdateTransaction(Status_Payment string, ID int) (models.Tr
 	}
 
 	// change transaction status
-	transaction.Status_Payment = Status_Payment
+	// transaction.Status_Payment = Status_Payment
 
 	// fmt.Println(status)
 	// fmt.Println(transaction.Status)
 	// fmt.Println(transaction.ID)
 
-	err := r.db.Model(&transaction).Updates(transaction).Error
+	err := r.db.Model(&transaction).Where("id = ?", ID).Update("status_payment", Status_Payment).Error
 
 	return transaction, err
 }
