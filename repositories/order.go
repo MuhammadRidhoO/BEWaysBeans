@@ -13,6 +13,7 @@ type OrderRepository interface {
 	Create_Order(newOrder models.Order) (models.Order, error)
 	UpdateOrder(order models.Order) (models.Order, error)
 	DeleteOrder(order models.Order) (models.Order, error)
+	DeleteAll(order models.Order, ID int) (models.Order, error)
 }
 
 func RepositoryOrder(db *gorm.DB) *repository {
@@ -54,5 +55,10 @@ func (r *repository) UpdateOrder(order models.Order) (models.Order, error) {
 // menghapus order
 func (r *repository) DeleteOrder(order models.Order) (models.Order, error) {
 	err := r.db.Delete(&order).Error
+	return order, err
+}
+
+func (r *repository) DeleteAll(order models.Order, ID int) (models.Order, error) {
+	err := r.db.Where("user_id = ?", ID).Delete(&order).Error
 	return order, err
 }

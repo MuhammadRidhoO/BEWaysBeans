@@ -27,4 +27,7 @@ func OrderRoutes(r *mux.Router) {
 
 	// delete order
 	r.HandleFunc("/order/{id}", middleware.Auth(h.DeleteOrder)).Methods("DELETE")
+
+	// delete all order
+	r.HandleFunc("/orderallorder", middleware.Auth(h.DeleteAll)).Methods("DELETE")
 }

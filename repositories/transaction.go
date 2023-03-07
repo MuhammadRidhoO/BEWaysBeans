@@ -8,10 +8,10 @@ import (
 type TransactionRepository interface {
 	FindTransactions() ([]models.Transaction, error)
 	FindTransactionsByUser(Id int) ([]models.Transaction, error)
-	GetTransaction(ID int) (models.Transaction, error)
+	GetTransaction(ID string) (models.Transaction, error)
 	GetTransactionString(ID string) (models.Transaction, error)
 	CreateTransaction(newTransaction models.Transaction) (models.Transaction, error)
-	UpdateTransaction(Status_Payment string, ID int) (models.Transaction, error)
+	UpdateTransaction(Status_Payment string, ID string) (models.Transaction, error)
 }
 
 func RepositoryTransaction(db *gorm.DB) *repository {
@@ -20,7 +20,7 @@ func RepositoryTransaction(db *gorm.DB) *repository {
 
 func (r *repository) FindTransactions() ([]models.Transaction, error) {
 	var transaction []models.Transaction
-	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").Find(&transaction).Error
+	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").Order("order_date desc").Find(&transaction).Error
 
 	return transaction, err
 }
@@ -34,9 +34,9 @@ func (r *repository) FindTransactionsByUser(Id int) ([]models.Transaction, error
 }
 
 // mengambil 1 transaksi berdasarkan id
-func (r *repository) GetTransaction(ID int) (models.Transaction, error) {
+func (r *repository) GetTransaction(ID string) (models.Transaction, error) {
 	var transaction models.Transaction
-	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction, ID).Error
+	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction,"id = ?", ID).Error
 
 	return transaction, err
 }
@@ -44,7 +44,7 @@ func (r *repository) GetTransaction(ID int) (models.Transaction, error) {
 // mengambil 1 transaksi berdasarkan id
 func (r *repository) GetTransactionString(ID string) (models.Transaction, error) {
 	var transaction models.Transaction
-	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction, ID).Error
+	err := r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction,"id = ?", ID).Error
 
 	return transaction, err
 }
@@ -57,9 +57,9 @@ func (r *repository) CreateTransaction(newTransaction models.Transaction) (model
 }
 
 // mengupdate status transaksi berdasarkan id
-func (r *repository) UpdateTransaction(Status_Payment string, ID int) (models.Transaction, error) {
+func (r *repository) UpdateTransaction(Status_Payment string, ID string) (models.Transaction, error) {
 	var transaction models.Transaction
-	r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction, "id = ?")
+	r.db.Preload("User").Preload("Order").Preload("Order.Product").First(&transaction, "id = ?", ID)
 
 	// If is different & Status is "success" decrement available quota on data trip
 	if Status_Payment != transaction.Status_Payment && Status_Payment == "success" {
@@ -67,7 +67,7 @@ func (r *repository) UpdateTransaction(Status_Payment string, ID int) (models.Tr
 			var product models.Product
 			r.db.First(&product, order.Product.Id)
 			product.Stock = product.Stock - order.Qty
-			r.db.Model(&product).Where("id = ?", ID).Updates(product)
+			r.db.Model(&product).Updates(product)
 		}
 	}
 

@@ -18,6 +18,7 @@ type ProductResponseForTransaction struct {
 }
 
 type CreateTransactionRequest struct {
+	Id       int                            `json:"id"`
 	Total    int                            `json:"total" validate:"required"`
 	User_Id  int                            `json:"user_id" validate:"required"`
 	Products []ProductRequestForTransaction `json:"products" validate:"required"`

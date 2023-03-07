@@ -49,8 +49,7 @@ func (h *handlerTransaction) FindTransactions(w http.ResponseWriter, r *http.Req
 func (h *handlerTransaction) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Id := mux.Vars(r)["id"]
-	Id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	Id := mux.Vars(r)["id"]
 
 	var Transaction models.Transaction
 	Transaction, err := h.TransactionRepository.GetTransaction(Id)
@@ -106,31 +105,32 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 	errValidation := validation.Struct(request)
 	if errValidation != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: errValidation.Error()}
+		response := dto.ErrorResult{
+			Code:    http.StatusBadRequest,
+			Message: "Failed Validation Transaction"}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	var TransIdIsMatch = false
-
-	var TransactionId int
-	for !TransIdIsMatch {
-		TransactionId = int(time.Now().Unix()) // 12948129048123
-		transactionData, _ := h.TransactionRepository.GetTransaction(TransactionId)
-		if transactionData.Id == 0 {
-			TransIdIsMatch = true
-		}
-	}
-
+	// var TransIdIsMatch = false
+	// var TransactionId int
+	// for !TransIdIsMatch {
+	// 	TransactionId = int(time.Now().Unix()) // 12948129048123
+	// 	transactionData, _ := h.TransactionRepository.GetTransaction(TransactionId)
+	// 	if transactionData.Id == 0 {
+	// 		TransIdIsMatch = true
+	// 	}
+	// }
 	newTransaction := models.Transaction{
-		Id:             TransactionId,
+		Id:              fmt.Sprintf("TRX-%d-%d", request.User_Id, timeIn("Asia/Jakarta").UnixNano()),
 		Total:          request.Total,
+		OrderDate:      timeIn("Asia/Jakarta"),
 		Status_Payment: "pending",
 		User_Id:        request.User_Id,
 	}
 
 	for _, order := range request.Products {
 		newTransaction.Order = append(newTransaction.Order, models.Order_Response_For_Transaction{
-			Id:         TransactionId,
+			Id:         order.Id,
 			Product_Id: order.Product_Id,
 			Qty:        order.Qty,
 		})
@@ -141,7 +141,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusBadRequest)
 		res := dto.ErrorResult{
 			Code:    http.StatusBadRequest,
-			Message: err.Error(),
+			Message: "Failed Create Transaction",
 		}
 		json.NewEncoder(w).Encode(res)
 		return
@@ -152,7 +152,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusNotFound)
 		res := dto.ErrorResult{
 			Code:    http.StatusNotFound,
-			Message: err.Error(),
+			Message: "Transaction Not Found",
 		}
 		json.NewEncoder(w).Encode(res)
 		return
@@ -163,7 +163,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 	// 2. Initiate Snap request
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
-			OrderID:  strconv.Itoa(transaction.Id),
+			OrderID:  transaction.Id,
 			GrossAmt: int64(transaction.Total),
 		},
 		CreditCard: &snap.CreditCardDetails{
@@ -182,7 +182,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 }
 
 func (h *handlerTransaction) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	id := mux.Vars(r)["id"]
 	var request dto.UpdateTransactionRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -670,17 +670,19 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 		return
 	}
 	// 3. Get order-id from payload
-	orderId := notificationPayload["order_id"].(string)
+	orderId, _ := notificationPayload["order_id"].(string)
+	// if !exists {
+	// 	// do something when key `order_id` not found
+	// 	return
+	// }
+
 	transactionStatus := notificationPayload["transaction_status"].(string)
 	fraudStatus := notificationPayload["fraud_status"].(string)
 
 	transaction, err := h.TransactionRepository.GetTransactionString(orderId)
-	fmt.Println("1 Order Id")
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
+		fmt.Println("Transaction not found")
 		return
 	}
 
@@ -688,11 +690,9 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 		if fraudStatus == "challenge" {
 			SendMail("success", transaction)
 			h.TransactionRepository.UpdateTransaction("pending", transaction.Id)
-			fmt.Println("test 1")
 		} else if fraudStatus == "accept" {
 			SendMail("success", transaction)
 			h.TransactionRepository.UpdateTransaction("success", transaction.Id)
-			fmt.Println("test 2")
 		}
 	} else if transactionStatus == "settlement" {
 		SendMail("success", transaction)
@@ -709,4 +709,12 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 		h.TransactionRepository.UpdateTransaction("pending", transaction.Id)
 	}
 
+}
+
+func timeIn(name string) time.Time {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		panic(err)
+	}
+	return time.Now().In(loc)
 }

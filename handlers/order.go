@@ -5,6 +5,7 @@ import (
 	"BEWaysBeans/models"
 	"BEWaysBeans/repositories"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -217,6 +218,41 @@ func (h *handlerOrder) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 	res := dto.SuccessResult{
 		Code: http.StatusOK,
 		Data: convertOrderResponse(orderDeleted),
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *handlerOrder) DeleteAll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+	UserId := int(userInfo["id"].(float64))
+
+	order, err := h.OrderRepository.GetOrder(UserId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		res := dto.ErrorResult{
+			Code: http.StatusBadRequest, Message: err.Error(),
+		}
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	fmt.Println("masuk")
+
+	orderDeletedAll, err := h.OrderRepository.DeleteAll(order, UserId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		res := dto.ErrorResult{
+			Code: http.StatusBadRequest, Message: err.Error(),
+		}
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	res := dto.SuccessResult{
+		Code: http.StatusOK,
+		Data: convertOrderResponse(orderDeletedAll),
 	}
 	json.NewEncoder(w).Encode(res)
 }
