@@ -111,15 +111,8 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	// var TransIdIsMatch = false
-	// var TransactionId int
-	// for !TransIdIsMatch {
-	// 	TransactionId = int(time.Now().Unix()) // 12948129048123
-	// 	transactionData, _ := h.TransactionRepository.GetTransaction(TransactionId)
-	// 	if transactionData.Id == 0 {
-	// 		TransIdIsMatch = true
-	// 	}
-	// }
+
+
 	newTransaction := models.Transaction{
 		Id:             fmt.Sprintf("TRX-%d-%d", request.User_Id, timeIn("Asia/Jakarta").UnixNano()),
 		Total:          request.Total,
@@ -695,17 +688,16 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 			h.TransactionRepository.UpdateTransaction("success", transaction.Id)
 		}
 	} else if transactionStatus == "settlement" {
+        h.TransactionRepository.UpdateTransaction("success", transaction.Id)
 		SendMail("success", transaction)
-		h.TransactionRepository.UpdateTransaction("success", transaction.Id)
-		fmt.Println("test 3")
 	} else if transactionStatus == "deny" {
-		SendMail("success", transaction)
+		// SendMail("success", transaction)
 		h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
 	} else if transactionStatus == "cancel" || transactionStatus == "expire" {
-		SendMail("success", transaction)
-		h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
+        h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
+		SendMail("Failed", transaction)
 	} else if transactionStatus == "pending" {
-		SendMail("success", transaction)
+		// SendMail("success", transaction)
 		h.TransactionRepository.UpdateTransaction("pending", transaction.Id)
 	}
 
