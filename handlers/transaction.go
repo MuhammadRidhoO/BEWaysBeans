@@ -121,7 +121,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 	// 	}
 	// }
 	newTransaction := models.Transaction{
-		Id:              fmt.Sprintf("TRX-%d-%d", request.User_Id, timeIn("Asia/Jakarta").UnixNano()),
+		Id:             fmt.Sprintf("TRX-%d-%d", request.User_Id, timeIn("Asia/Jakarta").UnixNano()),
 		Total:          request.Total,
 		OrderDate:      timeIn("Asia/Jakarta"),
 		Status_Payment: "pending",
