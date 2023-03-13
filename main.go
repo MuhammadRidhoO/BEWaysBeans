@@ -18,7 +18,6 @@ func main() {
 	firstDate := time.Date(2022, 4, 13, 1, 0, 0, 0, time.UTC)
 	secondDate := time.Date(2021, 2, 12, 5, 0, 0, 0, time.UTC)
 	difference := firstDate.Sub(secondDate)
-          
 
 	// Init godotenv here ...
 	err := godotenv.Load()
@@ -44,8 +43,10 @@ func main() {
 	var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
 	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-	var port = os.Getenv("PORT");
+	var port = os.Getenv("PORT")
 	fmt.Printf("Years: %d\n", int64(difference.Hours()/24/365))
+	// fmt.Println("server running localhost: " + port)
+	// http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
 	fmt.Println("server running localhost: " + port)
-	http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
+	http.ListenAndServe(":"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
 }
