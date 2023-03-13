@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
 	"BEWaysBeans/database"
 	"BEWaysBeans/pkg/mysql"
 	"BEWaysBeans/routes"
+	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -43,7 +44,7 @@ func main() {
 	var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
 	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-	var port = "5000"
+	var port = os.Getenv("PORT");
 	fmt.Printf("Years: %d\n", int64(difference.Hours()/24/365))
 	fmt.Println("server running localhost: " + port)
 	http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
