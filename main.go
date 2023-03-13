@@ -44,6 +44,7 @@ func main() {
 	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
 	var port = os.Getenv("PORT")
+	// var port = "5000"
 	fmt.Printf("Years: %d\n", int64(difference.Hours()/24/365))
 	// fmt.Println("server running localhost: " + port)
 	// http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
