@@ -112,11 +112,14 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// loc, err := time.LoadLocation(name)
+	localTime := time.Now()
+	formattedTime := localTime.Format("Monday, 02-Jan-06 15:04:05 MST")
 
 	newTransaction := models.Transaction{
-		Id:             fmt.Sprintf("TRX-%d-%d", request.User_Id, timeIn("Asia/Jakarta").UnixNano()),
+		Id:             fmt.Sprintf("TRX-%d-%d", request.User_Id, localTime.UnixNano()),
 		Total:          request.Total,
-		OrderDate:      timeIn("Asia/Jakarta"),
+		OrderDate:      formattedTime,
 		Status_Payment: "pending",
 		User_Id:        request.User_Id,
 	}
@@ -688,25 +691,17 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 			h.TransactionRepository.UpdateTransaction("success", transaction.Id)
 		}
 	} else if transactionStatus == "settlement" {
-        h.TransactionRepository.UpdateTransaction("success", transaction.Id)
+		h.TransactionRepository.UpdateTransaction("success", transaction.Id)
 		SendMail("success", transaction)
 	} else if transactionStatus == "deny" {
 		// SendMail("success", transaction)
 		h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
 	} else if transactionStatus == "cancel" || transactionStatus == "expire" {
-        h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
+		h.TransactionRepository.UpdateTransaction("failed", transaction.Id)
 		SendMail("Failed", transaction)
 	} else if transactionStatus == "pending" {
 		// SendMail("success", transaction)
 		h.TransactionRepository.UpdateTransaction("pending", transaction.Id)
 	}
 
-}
-
-func timeIn(name string) time.Time {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		panic(err)
-	}
-	return time.Now().In(loc)
 }
