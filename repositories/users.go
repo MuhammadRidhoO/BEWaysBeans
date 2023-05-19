@@ -13,9 +13,6 @@ type UserRepository interface {
 	UpdateUser(user models.User) (models.User, error)
 	UpdatePasswordUser(update_password_User models.User) (models.User, error)
 	DeleteUser(user models.User) (models.User, error)
-
-	// GetPassword(username string) (string, error)
-	// UpdatePassword(username, password string) error
 }
 
 func RepositoryUser(db *gorm.DB) *repository {

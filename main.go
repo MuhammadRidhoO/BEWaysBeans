@@ -6,7 +6,7 @@ import (
 	"BEWaysBeans/routes"
 	"fmt"
 	"net/http"
-	"os"
+	// "os"``
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -43,11 +43,11 @@ func main() {
 	var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
 	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-	var port = os.Getenv("PORT")
-	// var port = "5000"
+	// var port = os.Getenv("PORT")
+	var port = "5000"
 	fmt.Printf("Years: %d\n", int64(difference.Hours()/24/365))
-	// fmt.Println("server running localhost: " + port)
-	// http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
 	fmt.Println("server running localhost: " + port)
-	http.ListenAndServe(":"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
+	http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
+	// fmt.Println("server running localhost: " + port)
+	// http.ListenAndServe(":"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
 }
